@@ -5,7 +5,10 @@ import android.content.SharedPreferences
 import androidx.room.Room
 import com.example.plaintext.data.PlainTextDatabase
 import com.example.plaintext.data.dao.PasswordDao
-import com.example.plaintext.ui.screens.hello.dbSimulator // Add this import
+import com.example.plaintext.data.repository.LocalPasswordDBStore
+import com.example.plaintext.data.repository.PasswordDBStore
+import com.example.plaintext.ui.screens.hello.dbSimulator
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,10 +41,20 @@ object DataDiModule {
         return context.getSharedPreferences("PlainTextPreferences", Context.MODE_PRIVATE)
     }
 
-    // ADD THIS FUNCTION
     @Provides
     @Singleton
     fun provideDBSimulator(): dbSimulator {
         return dbSimulator()
     }
+}
+
+// Create an abstract module for binding interfaces to implementations
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class BindsModule {
+    @Binds
+    @Singleton
+    abstract fun bindPasswordDBStore(
+        localPasswordDBStore: LocalPasswordDBStore
+    ): PasswordDBStore
 }

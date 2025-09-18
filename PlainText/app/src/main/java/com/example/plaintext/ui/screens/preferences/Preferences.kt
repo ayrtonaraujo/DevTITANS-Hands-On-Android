@@ -108,7 +108,7 @@ fun PreferenceItem(title: String, summary: String, onClick: () -> Unit) {
         Text(text = title, style = MaterialTheme.typography.bodyLarge)
         Text(text = summary, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    Divider()
+    HorizontalDivider()
 }
 
 @Composable
@@ -126,7 +126,7 @@ fun SwitchPreferenceItem(title: String, summary: String, checked: Boolean, onChe
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
-    Divider()
+    HorizontalDivider()
 }
 
 
