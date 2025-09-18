@@ -51,14 +51,22 @@ fun rememberJetcasterAppState(
 }
 
 
+// Substitua a sua classe JetcasterAppState por esta
+
 class JetcasterAppState(
     val navController: NavHostController,
     private val context: Context
 ) {
 
+    val currentRoute: String?
+        @Composable get() = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    fun navigateBack() {
+        navController.popBackStack()
+    }
+
     fun checkRoute(route: String): Boolean {
         val currentRoute = navController.currentBackStackEntry?.destination?.route.toString()
-
         return currentRoute != route
     }
 
@@ -70,12 +78,17 @@ class JetcasterAppState(
         navController.navigate(Screen.Login)
     }
 
-}
+    // --- FUNÇÕES QUE ESTAVAM FALTANDO ---
+    fun navigateToPreferences() {
+        navController.navigate(Screen.Preferences)
+    }
 
-/**
- * If the lifecycle is not resumed it means this NavBackStackEntry already processed a nav event.
- *
- * This is used to de-duplicate navigation events.
- */
-private fun NavBackStackEntry.lifecycleIsResumed() =
-    this.lifecycle.currentState == Lifecycle.State.RESUMED
+    fun navigateToList() {
+        navController.navigate(Screen.List)
+    }
+
+    fun navigateToEditList(password: PasswordInfo) {
+        navController.navigate(Screen.EditList(password))
+    }
+    // --- FIM DAS FUNÇÕES ADICIONADAS ---
+}
