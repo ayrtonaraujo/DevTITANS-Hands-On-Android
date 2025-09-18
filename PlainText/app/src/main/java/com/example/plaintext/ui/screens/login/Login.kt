@@ -147,7 +147,7 @@ fun HeaderComponent() {
     ) {
 
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.cadeado_logo),
             contentDescription = "Logo do App",
             modifier = Modifier.height(80.dp)
         )
@@ -169,7 +169,7 @@ fun HeaderComponent() {
                 color = Color.White
             )
             Text(
-                text = "Equipe 2",
+                text = "Equipe 2 - DevTitans_08",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White
             )
@@ -206,7 +206,7 @@ fun TopBarComponent(
     }
 
     TopAppBar(
-        title = { Text(title ?: "PlainText") },
+        title = { Text(title ?: "ConfiaEmNois Security") },
         actions = {
             IconButton(onClick = { expanded = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Menu")

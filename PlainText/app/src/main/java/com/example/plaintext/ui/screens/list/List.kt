@@ -142,7 +142,7 @@ fun ListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.cadeado_log_azul),
             contentDescription = "Logo",
             modifier = Modifier.fillMaxHeight()
         )
