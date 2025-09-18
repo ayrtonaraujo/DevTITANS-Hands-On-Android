@@ -47,7 +47,7 @@ fun ListView(
     listViewModel: ListViewModel = hiltViewModel()
 ) {
     Scaffold(
-        topBar = { TopBarComponent() },
+        topBar = { TopBarComponent(title = "\uD83D\uDD10 Senhas salvas") },
         floatingActionButton = { AddButton(onClick = onAddClick) }
     ) {
         Box(modifier = Modifier.padding(it)) {
