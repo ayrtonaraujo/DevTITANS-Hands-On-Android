@@ -1,40 +1,45 @@
 package com.example.plaintext.ui.viewmodel
 
+
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.plaintext.data.model.PasswordInfo
 import com.example.plaintext.data.repository.PasswordDBStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ListViewState(
-    val passwordList: List<PasswordInfo> = emptyList(),
-    val isCollected: Boolean = false
+    var passwordList: List<PasswordInfo>,
+    var isCollected: Boolean = false
 )
 
 @HiltViewModel
-class ListViewModel @Inject constructor(
+open class ListViewModel @Inject constructor(
     private val passwordDBStore: PasswordDBStore
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(ListViewState())
-    val uiState = _uiState.asStateFlow()
+    var listViewState by mutableStateOf(ListViewState(passwordList = emptyList()))
+        private set
 
     init {
-        loadPasswords()
+        viewModelScope.launch {
+            // Execute o método getList() do passwordDBStore e colete o resultado
+            passwordDBStore.getList().collect { passwordList ->
+                listViewState = listViewState.copy(
+                    passwordList = passwordList,
+                    isCollected = true
+                )
+            }
+        }
     }
 
-    private fun loadPasswords() {
+    fun savePassword(password: PasswordInfo){
         viewModelScope.launch {
-            passwordDBStore.getPasswords().collect { passwords ->
-                _uiState.update {
-                    it.copy(passwordList = passwords, isCollected = true)
-                }
-            }
+            passwordDBStore.save(password)
         }
     }
 }
