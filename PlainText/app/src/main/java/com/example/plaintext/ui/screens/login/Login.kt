@@ -1,5 +1,10 @@
 package com.example.plaintext.ui.screens.login
 
+
+
+import androidx.compose.ui.graphics.Color
+
+import androidx.compose.foundation.background
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -133,7 +138,10 @@ fun Login_screen(
 @Composable
 fun HeaderComponent() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+             .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.onPrimaryContainer)
+            .padding(top = 20.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -145,10 +153,26 @@ fun HeaderComponent() {
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = "\"O mais ", style = MaterialTheme.typography.titleMedium)
-            Text(text = "seguro gerenciador", style = MaterialTheme.typography.titleMedium)
-            Text(text = "de senhas.\"", style = MaterialTheme.typography.titleMedium)
-            Text(text = "Equipe 2", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "\"O mais seguro ",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = " gerenciador",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = "de senhas.\"",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = "Equipe 2",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White
+            )
         }
     }
 }
@@ -171,6 +195,7 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarComponent(
+    title: String? = null, // Adiciona um parâmetro opcional para o título
     navigateToSettings: (() -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -181,7 +206,7 @@ fun TopBarComponent(
     }
 
     TopAppBar(
-        title = { Text("PlainText") },
+        title = { Text(title ?: "PlainText") },
         actions = {
             IconButton(onClick = { expanded = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Menu")
@@ -209,18 +234,6 @@ fun TopBarComponent(
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    PlainTextTheme {
-
-        Login_screen(
-            navigateToSettings = {},
-            navigateToList = {},
-            viewModel = null!! // This is a trick for the preview system
-        )
-    }
-}
 
 @Preview(showBackground = true, name = "Login Screen - Static Layout")
 @Composable

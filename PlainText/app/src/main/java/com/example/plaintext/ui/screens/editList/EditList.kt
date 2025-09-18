@@ -1,5 +1,8 @@
 package com.example.plaintext.ui.screens.editList
 
+
+import com.example.plaintext.ui.screens.login.TopBarComponent
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +19,7 @@ fun isPasswordEmpty(password: PasswordInfo): Boolean {
     return password.name.isEmpty() && password.login.isEmpty() && password.password.isEmpty() && password.notes.isEmpty()
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditList(
@@ -23,7 +27,7 @@ fun EditList(
     navigateBack: () -> Unit,
     savePassword: (password: PasswordInfo) -> Unit
 ) {
-    val title = if (isPasswordEmpty(args.password)) "Adicionar nova senha" else "Editar Senha"
+    val title = if (isPasswordEmpty(args.password)) "\uD83D\uDCBE Adicionar nova senha" else "✏\uFE0F Editar Senha"
 
     var nome by rememberSaveable { mutableStateOf(args.password.name) }
     var usuario by rememberSaveable { mutableStateOf(args.password.login) }
@@ -32,12 +36,8 @@ fun EditList(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = title) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            TopBarComponent(
+                title = title
             )
         }
     ) { innerPadding ->
@@ -70,7 +70,7 @@ fun EditList(
                 textInputHeight = 120
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+//            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
@@ -116,13 +116,13 @@ fun EditInput(
             value = textState,
             onValueChange = onValueChange,
             label = { Text(textInputLabel) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 5
         )
     }
     Spacer(modifier = Modifier.height(10.dp))
 }
 
-//Modo adicionar
 @Preview(showBackground = true, name = "Modo Adicionar")
 @Composable
 fun EditListAddPreview() {
@@ -136,7 +136,6 @@ fun EditListAddPreview() {
 }
 
 
-//modo editar
 @Preview(showBackground = true, name = "Modo Editar")
 @Composable
 fun EditListEditPreview() {
