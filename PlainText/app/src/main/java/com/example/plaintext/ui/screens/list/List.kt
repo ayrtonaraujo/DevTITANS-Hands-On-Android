@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
@@ -30,23 +30,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.plaintext.R
+import com.example.plaintext.data.model.PasswordInfo
 import com.example.plaintext.ui.screens.login.TopBarComponent
 import com.example.plaintext.ui.viewmodel.ListViewModel
 import com.example.plaintext.ui.viewmodel.ListViewState
-import androidx.compose.foundation.overscroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.plaintext.data.model.PasswordInfo
 
 @Composable
 fun ListView(
-) {}
+    onItemClick: (password: PasswordInfo) -> Unit,
+    onAddClick: () -> Unit,
+    listViewModel: ListViewModel = hiltViewModel()
+) {
+    Scaffold(
+        topBar = { TopBarComponent(title = "\uD83D\uDD10 Senhas salvas") },
+        floatingActionButton = { AddButton(onClick = onAddClick) }
+    ) {
+        Box(modifier = Modifier.padding(it)) {
+            ListItemContent(
+                listState = listViewModel.listViewState,
+                navigateToEdit = onItemClick
+            )
+        }
+    }
+}
 
 @Composable
 fun AddButton(onClick: () -> Unit) {
@@ -62,29 +73,34 @@ fun AddButton(onClick: () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ListItemContent(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     listState: ListViewState,
     navigateToEdit: (password: PasswordInfo) -> Unit
 ) {
-        when {
-            !listState.isCollected -> {
-                LoadingScreen()
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = modifier
-                        .fillMaxSize()
+    when {
+        !listState.isCollected -> {
+            LoadingScreen()
+        }
+        listState.passwordList.isEmpty() -> {
+            EmptyListScreen()
+        }
+        else -> {
+            LazyColumn(
+                modifier = modifier
+                    .fillMaxSize()
+            ) {
+                items(
+                    items = listState.passwordList,
+                    key = { it.id }
                 ) {
-                    items(listState.passwordList.size) {
-                        ListItem(
-                            listState.passwordList[it],
-                            navigateToEdit
-                        )
-                    }
+                    ListItem(
+                        it,
+                        navigateToEdit
+                    )
                 }
             }
         }
+    }
 }
 
 @Composable
@@ -95,6 +111,17 @@ fun LoadingScreen() {
         horizontalArrangement = Arrangement.Center
     ) {
         Text("Carregando")
+    }
+}
+
+@Composable
+fun EmptyListScreen() {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text("Nenhuma senha salva")
     }
 }
 
@@ -115,7 +142,7 @@ fun ListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.cadeado_log_azul),
             contentDescription = "Logo",
             modifier = Modifier.fillMaxHeight()
         )
@@ -133,4 +160,3 @@ fun ListItem(
         )
     }
 }
-

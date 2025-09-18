@@ -1,63 +1,46 @@
 package com.example.plaintext.ui.screens.util
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
 fun MyInputAlertDialog(
-    shouldShowDialog: MutableState<Boolean>,
     title: String,
     label: String,
-    fieldValue: String? = null,
-    onFinish: ((field: String) -> Unit)? = null
+    initialValue: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+    isPassword: Boolean = false
 ) {
-    val defaultValue = fieldValue ?: ""
-    val field = remember { mutableStateOf(TextFieldValue(defaultValue, TextRange(defaultValue.length))) }
-    val focusRequester = remember { FocusRequester() }
+    var text by rememberSaveable { mutableStateOf(initialValue) }
 
-    if (shouldShowDialog.value) {
-        AlertDialog(
-            onDismissRequest = {
-                shouldShowDialog.value = false
-            },
-            title = { Text(text = title) },
-            text = {
-                OutlinedTextField(
-                    value = field.value,
-                    label = { Text(label) },
-                    onValueChange = {
-                        field.value = it
-                    },
-                    modifier = Modifier.focusRequester(focusRequester)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        shouldShowDialog.value = false
-                        onFinish?.invoke(field.value.text)
-                    }
-                ) {
-                    Text(text = "Ok")
-                }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text(label) },
+                visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(text) }
+            ) {
+                Text("Confirmar")
             }
-        )
-
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text("Cancelar")
+            }
         }
-    }
+    )
 }
