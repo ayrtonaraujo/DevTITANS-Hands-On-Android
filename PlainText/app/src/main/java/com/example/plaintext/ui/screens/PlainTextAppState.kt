@@ -112,7 +112,7 @@ class JetcasterAppState(
     }
 
     fun navigateToEditList(passwordId: Int) {
-        navController.navigate("edit/$passwordId") {
+        navController.navigate("edit_list/$passwordId") {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
