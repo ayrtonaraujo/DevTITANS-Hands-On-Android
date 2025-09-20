@@ -8,7 +8,7 @@ import com.example.plaintext.data.model.Password
 @Database(
     entities = [Password::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class PlainTextDatabase : RoomDatabase() {
     abstract fun passwordDao(): PasswordDao

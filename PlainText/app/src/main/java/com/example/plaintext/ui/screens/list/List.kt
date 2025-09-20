@@ -1,7 +1,6 @@
 package com.example.plaintext.ui.screens.list
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,16 +15,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,24 +45,93 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.plaintext.R
 import com.example.plaintext.data.model.PasswordInfo
 import com.example.plaintext.ui.screens.login.TopBarComponent
+import com.example.plaintext.ui.theme.PlainTextTheme
 import com.example.plaintext.ui.viewmodel.ListViewModel
 import com.example.plaintext.ui.viewmodel.ListViewState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListView(
     onItemClick: (password: PasswordInfo) -> Unit,
     onAddClick: () -> Unit,
-    listViewModel: ListViewModel = hiltViewModel()
+    onLogout: () -> Unit,
+    viewModel: ListViewModel = hiltViewModel(),
+    onNavigateToEdit: (PasswordInfo) -> Unit = {},
+    onNavigateToDetails: (PasswordInfo) -> Unit = {}
 ) {
+    val listState by viewModel.listViewState
+    
+    LaunchedEffect(Unit) {
+        // Trigger initial load if needed
+        if (!listState.isCollected) {
+            viewModel.loadPasswords()
+        }
+    }
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Sair") },
+            text = { Text("Deseja realmente sair do aplicativo?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    }
+                ) {
+                    Text("Sair")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
     Scaffold(
-        topBar = { TopBarComponent(title = "\uD83D\uDD10 Senhas salvas") },
+        topBar = { 
+            TopBarComponent(
+                title = "\uD83D\uDD10 Senhas salvas",
+                showLogout = true,
+                onLogoutClick = { showLogoutDialog = true }
+            ) 
+        },
         floatingActionButton = { AddButton(onClick = onAddClick) }
-    ) {
-        Box(modifier = Modifier.padding(it)) {
-            ListItemContent(
-                listState = listViewModel.listViewState,
-                navigateToEdit = onItemClick
-            )
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            when {
+                !listState.isCollected -> {
+                    LoadingScreen()
+                }
+                listState.passwordList.isEmpty() -> {
+                    EmptyListScreen()
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = listState.passwordList,
+                            key = { it.id }
+                        ) { password ->
+                            ListItem(
+                                password = password,
+                                onEditClick = { onNavigateToEdit(password) },
+                                onItemClick = { onNavigateToDetails(password) }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -75,7 +152,8 @@ fun AddButton(onClick: () -> Unit) {
 fun ListItemContent(
     modifier: Modifier = Modifier,
     listState: ListViewState,
-    navigateToEdit: (password: PasswordInfo) -> Unit
+    navigateToEdit: (password: PasswordInfo) -> Unit,
+    onItemClick: (password: PasswordInfo) -> Unit = {}
 ) {
     when {
         !listState.isCollected -> {
@@ -94,8 +172,9 @@ fun ListItemContent(
                     key = { it.id }
                 ) {
                     ListItem(
-                        it,
-                        navigateToEdit
+                        password = it,
+                        onEditClick = { password -> navigateToEdit(password) },
+                        onItemClick = { password -> onItemClick(password) }
                     )
                 }
             }
@@ -128,7 +207,8 @@ fun EmptyListScreen() {
 @Composable
 fun ListItem(
     password: PasswordInfo,
-    navigateToEdit: (password: PasswordInfo) -> Unit
+    onEditClick: (PasswordInfo) -> Unit,
+    onItemClick: (PasswordInfo) -> Unit
 ) {
     val title = password.name
     val subTitle = password.login
@@ -137,8 +217,8 @@ fun ListItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
-            .clickable { navigateToEdit(password) }
-            .padding(horizontal = 10.dp),
+            .clickable { onItemClick(password) }
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(

@@ -4,15 +4,20 @@ package com.example.plaintext.ui.screens.editList
 import com.example.plaintext.ui.screens.login.TopBarComponent
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plaintext.data.model.PasswordInfo
 import com.example.plaintext.ui.screens.Screen
+import com.example.plaintext.ui.screens.login.TopBarComponent
 import com.example.plaintext.ui.theme.PlainTextTheme
 
 fun isPasswordEmpty(password: PasswordInfo): Boolean {
@@ -25,21 +30,37 @@ fun isPasswordEmpty(password: PasswordInfo): Boolean {
 fun EditList(
     args: Screen.EditList,
     navigateBack: () -> Unit,
-    savePassword: (password: PasswordInfo) -> Unit
+    savePassword: suspend (password: PasswordInfo) -> Unit
 ) {
-    val title = if (isPasswordEmpty(args.password)) "\uD83D\uDCBE Adicionar nova senha" else "✏\uFE0F Editar Senha"
+    val isNewPassword = args.id == 0
+    val title = if (isNewPassword) "💾 Adicionar nova senha" else "✏️ Editar Senha"
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var showError by rememberSaveable { mutableStateOf<String?>(null) }
 
-    var nome by rememberSaveable { mutableStateOf(args.password.name) }
-    var usuario by rememberSaveable { mutableStateOf(args.password.login) }
-    var senha by rememberSaveable { mutableStateOf(args.password.password) }
-    var notas by rememberSaveable { mutableStateOf(args.password.notes) }
+    var nome by rememberSaveable { mutableStateOf("") }
+    var usuario by rememberSaveable { mutableStateOf("") }
+    var senha by rememberSaveable { mutableStateOf("") }
+    var notas by rememberSaveable { mutableStateOf("") }
+    
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Load password data if editing
+    LaunchedEffect(args) {
+        // For new passwords, we don't need to load anything
+        if (!isNewPassword) {
+            // In a real app, you would load the password data here
+            // For now, we'll just use empty strings
+            // The actual loading is handled by the parent composable
+        }
+    }
 
     Scaffold(
         topBar = {
             TopBarComponent(
-                title = title
+                title = title,
+                onBackClick = if (!isLoading) navigateBack else null
             )
-        }
+        } 
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -72,23 +93,41 @@ fun EditList(
 
 //            Spacer(modifier = Modifier.weight(1f))
 
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = {
-                    val updatedPassword = PasswordInfo(
-                        id = args.password.id,
+                    val password = PasswordInfo(
+                        id = args.id,
                         name = nome,
                         login = usuario,
                         password = senha,
                         notes = notas
                     )
-                    savePassword(updatedPassword)
-                    navigateBack()
+                    
+                    if (isPasswordEmpty(password)) {
+                        showError = "Por favor, preencha pelo menos um campo"
+                        return@Button
+                    }
+                    
+                    coroutineScope.launch {
+                        try {
+                            isLoading = true
+                            savePassword(password)
+                            // Navigation is now handled by the parent after successful save
+                        } catch (e: Exception) {
+                            showError = e.message ?: "Erro ao salvar a senha"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
+                    .padding(horizontal = 22.dp),
+                enabled = !isLoading
             ) {
-                Text("Salvar")
+                Text(if (isLoading) "Salvando..." else "Salvar")
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

@@ -7,7 +7,6 @@ import com.example.plaintext.data.PlainTextDatabase
 import com.example.plaintext.data.dao.PasswordDao
 import com.example.plaintext.data.repository.LocalPasswordDBStore
 import com.example.plaintext.data.repository.PasswordDBStore
-import com.example.plaintext.ui.screens.hello.dbSimulator
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -19,6 +18,8 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DataDiModule {
+    // Version number for the database
+    private const val DATABASE_VERSION = 1
 
     @Provides
     fun providePasswordDao(appDatabase: PlainTextDatabase): PasswordDao {
@@ -31,20 +32,14 @@ object DataDiModule {
         return Room.databaseBuilder(
             appContext,
             PlainTextDatabase::class.java,
-            "plaintext_db"
-        ).build()
+            "plaintext-db"
+        ).fallbackToDestructiveMigration()
+         .build()
     }
 
     @Provides
-    @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("PlainTextPreferences", Context.MODE_PRIVATE)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDBSimulator(): dbSimulator {
-        return dbSimulator()
     }
 }
 

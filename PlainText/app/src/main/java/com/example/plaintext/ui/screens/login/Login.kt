@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,10 +46,12 @@ fun Login_screen(
     var senha by rememberSaveable { mutableStateOf("") }
     var salvarLogin by rememberSaveable { mutableStateOf(false) }
 
-    // Efeito para preencher o campo de login com o valor salvo
+    // Efeito para preencher os campos de login e senha com os valores salvos
     LaunchedEffect(preferencesState) {
+        login = preferencesState.login
         if (preferencesState.preencherLogin) {
-            login = preferencesState.login
+            // Se estiver configurado para preencher login, também preenchemos a senha
+            senha = preferencesState.password
         }
         salvarLogin = preferencesState.preencherLogin
     }
@@ -117,12 +120,22 @@ fun Login_screen(
             // LÓGICA DO BOTÃO CORRIGIDA
             Button(
                 onClick = {
-                    // AGORA CHAMA A FUNÇÃO DO VIEWMODEL PARA VERIFICAR
+                    // Verifica se os campos estão preenchidos
+                    if (login.isBlank() || senha.isBlank()) {
+                        Toast.makeText(context, "Por favor, preencha login e senha", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    
+                    // Verifica as credenciais
                     if (viewModel.checkCredentials(login, senha)) {
-                        Toast.makeText(context, "Olá $login", Toast.LENGTH_SHORT).show()
+                        // Se marcado para salvar, atualiza o login (a senha já foi salva)
+                        if (salvarLogin) {
+                            viewModel.updateLogin(login)
+                        }
+                        Toast.makeText(context, "Bem-vindo, $login!", Toast.LENGTH_SHORT).show()
                         navigateToList() // Navega para a próxima tela
                     } else {
-                        Toast.makeText(context, "Login/senha inválidos!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Login ou senha incorretos", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -195,8 +208,13 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarComponent(
-    title: String? = null, // Adiciona um parâmetro opcional para o título
+    title: String? = null,
     navigateToSettings: (() -> Unit)? = null,
+    onSaveClick: (() -> Unit)? = null,
+    onBackClick: (() -> Unit)? = null,
+    onLogoutClick: (() -> Unit)? = null,
+    showLogout: Boolean = false,
+    isSaveEnabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
     val shouldShowDialog = remember { mutableStateOf(false) }
@@ -206,29 +224,60 @@ fun TopBarComponent(
     }
 
     TopAppBar(
-        title = { Text(title ?: "ConfiaEmNois Security") },
-        actions = {
-            IconButton(onClick = { expanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+        title = { 
+            Text(title ?: "ConfiaEmNois Security") 
+        },
+        navigationIcon = {
+            if (onBackClick != null) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Voltar"
+                    )
+                }
             }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Configurações") },
-                    onClick = {
-                        navigateToSettings?.invoke()
-                        expanded = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Sobre") },
-                    onClick = {
-                        shouldShowDialog.value = true
-                        expanded = false
-                    }
-                )
+        },
+        actions = {
+            if (onSaveClick != null) {
+                TextButton(
+                    onClick = onSaveClick,
+                    enabled = isSaveEnabled
+                ) {
+                    Text("Salvar")
+                }
+            }
+            
+            if (showLogout) {
+                IconButton(onClick = { onLogoutClick?.invoke() }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_logout),
+                        contentDescription = "Sair",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            } else if (navigateToSettings != null) {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Configurações") },
+                        onClick = {
+                            navigateToSettings()
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Sobre") },
+                        onClick = {
+                            shouldShowDialog.value = true
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     )

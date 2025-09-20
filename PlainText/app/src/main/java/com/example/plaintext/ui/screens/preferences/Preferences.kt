@@ -54,15 +54,21 @@ fun SettingsScreen(
             // Item para editar a senha
             PreferenceItem(
                 title = "Setar Senha",
-                summary = "Senha para entrar no sistema",
+                summary = if (uiState.password.isNotEmpty()) "••••••••" else "Senha para entrar no sistema",
                 onClick = { showPasswordDialog = true }
             )
-            // Item com Switch
+            // Item com Switch para lembrar credenciais
             SwitchPreferenceItem(
-                title = "Preencher login",
-                summary = "Preencher login na tela inicial",
-                checked = uiState.preencherLogin, // Usa o valor do ViewModel
-                onCheckedChange = { viewModel.updatePreencher(it) } // CHAMA A FUNÇÃO DE SALVAR
+                title = "Lembrar credenciais",
+                summary = "Salvar e preencher automaticamente o login e senha",
+                checked = uiState.preencherLogin,
+                onCheckedChange = { 
+                    viewModel.updatePreencher(it)
+                    // Se estiver ativando, salva o estado atual
+                    if (it) {
+                        viewModel.updateLogin(uiState.login)
+                    }
+                }
             )
         }
     }
